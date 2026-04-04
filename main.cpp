@@ -13,7 +13,7 @@ extern "C" {
 }
 
 const int mc = MC_1_2;
-const int n = std::thread::hardware_concurrency();
+const int n = 1;//std::thread::hardware_concurrency();
 std::mutex mtx;
 
 namespace config {
@@ -55,12 +55,12 @@ public:
 
 #define SALT 10387312L
 
-// uint32_t getVillageRegionSeed(int worldSeed, int chunkX, int chunkZ) {
-//     int regX = chunkX < 0 ? chunkX - 39 : chunkX;
-//     int regZ = chunkZ < 0 ? chunkZ - 39 : chunkZ;
-//
-//     return regX * REGION_A + regZ * REGION_B + worldSeed + SALT;
-// }
+uint32_t getVillageRegionSeed(int worldSeed, int chunkX, int chunkZ) {
+    int regX = chunkX < 0 ? chunkX - 39 : chunkX;
+    int regZ = chunkZ < 0 ? chunkZ - 39 : chunkZ;
+
+    return regX * REGION_A + regZ * REGION_B + worldSeed + SALT;
+}
 
 int getVillageWorldSeed(uint32_t regionSeed, int chunkX, int chunkZ) {
     int regX = chunkX < 0 ? chunkX - 39 : chunkX;
@@ -91,6 +91,7 @@ void checkSeed(uint32_t seed, StructureConfig sc, Piece *houses) {
     if (torchCount < config::minTorches) return;
 
     Spiral s;
+    // int found = 0;
     while (true) {
         auto [x, z] = s.next();
 
@@ -109,6 +110,7 @@ void checkSeed(uint32_t seed, StructureConfig sc, Piece *houses) {
         mtx.lock();
         printCsvRow(worldSeed, torchCount, village);
         mtx.unlock();
+
         return;
     }
 }
@@ -120,7 +122,7 @@ void searchDynamic() {
 
     while (true) {
         uint32_t start = nextSeed.fetch_add(config::chunk);
-        if (start >= config::maxSeed) break;
+        if (start > config::maxSeed) break;
 
         uint32_t end;
         if (start > config::maxSeed - config::chunk) {
@@ -129,7 +131,7 @@ void searchDynamic() {
             end = start + config::chunk;
         }
 
-        for (uint32_t seed = start; seed < end; seed++) {
+        for (uint32_t seed = start; seed <= end; seed++) {
             if (seed % config::reportInterval == 0 && seed != config::minSeed) {
                 uint32_t seedsProcessed = nextSeed.load() - config::minSeed;
                 auto elapsed = std::chrono::steady_clock::now() - startTime;
@@ -148,18 +150,15 @@ void searchDynamic() {
 int main() {
     printCsvHeader();
 
-    // auto r = getRegionSeed(-1336892493, 17, 22);
+
+    StructureConfig sc;
+    getStructureConfig(Village, mc, &sc);
+    Piece houses[100];
+    auto r = getVillageRegionSeed(1977692756, -220>>4, 804>>4);
+    checkSeed(r, sc, houses);
+    return 0;
+
     // std::cout << r << std::endl;
-    // setSeed(r);
-    //
-    // int torchCount = 0;
-    // Piece houses[100];
-    // getPreVillagePiecesNoSet(houses, 100, 0, 0, &torchCount);
-    // std::cout << torchCount << std::endl;
-    //
-    // auto w = getWorldSeed(r, 17, 22);
-    // std::cout << w << std::endl;
-    //
     // return 0;
 
     std::vector<std::thread> threads;
