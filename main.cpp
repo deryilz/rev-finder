@@ -70,7 +70,7 @@ int getVillageWorldSeed(uint32_t regionSeed, int chunkX, int chunkZ) {
     return regionSeed - (uint32_t)C;
 }
 
-std::atomic<uint32_t> nextSeed(config::minSeed);
+std::atomic<uint64_t> nextSeed(config::minSeed);
 auto startTime = std::chrono::steady_clock::now();
 
 void printCsvHeader() {
@@ -121,19 +121,19 @@ void searchDynamic() {
     Piece houses[100];
 
     while (true) {
-        uint32_t start = nextSeed.fetch_add(config::chunk);
+        uint64_t start = nextSeed.fetch_add(config::chunk);
         if (start > config::maxSeed) break;
 
-        uint32_t end;
+        uint64_t end;
         if (start > config::maxSeed - config::chunk) {
             end = config::maxSeed;
         } else {
             end = start + config::chunk;
         }
 
-        for (uint32_t seed = start; seed <= end; seed++) {
+        for (uint64_t seed = start; seed <= end; seed++) {
             if (seed % config::reportInterval == 0 && seed != config::minSeed) {
-                uint32_t seedsProcessed = nextSeed.load() - config::minSeed;
+                uint64_t seedsProcessed = nextSeed.load() - config::minSeed;
                 auto elapsed = std::chrono::steady_clock::now() - startTime;
                 double seconds = std::chrono::duration<double>(elapsed).count();
                 double rate = static_cast<double>(seedsProcessed) / seconds;
