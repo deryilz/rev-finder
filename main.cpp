@@ -13,7 +13,7 @@ extern "C" {
 }
 
 const int mc = MC_1_2;
-const int n = 1;//std::thread::hardware_concurrency();
+const int n = std::thread::hardware_concurrency();
 std::mutex mtx;
 
 namespace config {
