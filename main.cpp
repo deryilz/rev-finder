@@ -146,7 +146,7 @@ void searchDynamic() {
 }
 
 int main() {
-    // printCsvHeader();
+    printCsvHeader();
 
     // auto r = getRegionSeed(-1336892493, 17, 22);
     // std::cout << r << std::endl;
