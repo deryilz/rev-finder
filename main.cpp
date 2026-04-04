@@ -151,12 +151,12 @@ int main() {
     printCsvHeader();
 
 
-    StructureConfig sc;
-    getStructureConfig(Village, mc, &sc);
-    Piece houses[100];
-    auto r = getVillageRegionSeed(1977692756, -220>>4, 804>>4);
-    checkSeed(r, sc, houses);
-    return 0;
+    // StructureConfig sc;
+    // getStructureConfig(Village, mc, &sc);
+    // Piece houses[100];
+    // auto r = getVillageRegionSeed(1977692756, -220>>4, 804>>4);
+    // checkSeed(r, sc, houses);
+    // return 0;
 
     // std::cout << r << std::endl;
     // return 0;
