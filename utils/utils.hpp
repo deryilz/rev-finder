@@ -1,10 +1,10 @@
-#pragma once
-
 #include <cstdint>
 #include <utility>
 
+extern "C" {
+    #include "../cubiomes-viewer-bedrock/cubiomes/finders.h"
+}
 
-// gpt'd
 class Spiral {
     int x = 0, z = 0;
     int dx = 1, dz = 0;
@@ -51,5 +51,41 @@ namespace rev {
 
         int64_t C = regX * REV_REGION_A + regZ * REV_REGION_B + REV_SALT;
         return regionSeed - (uint32_t)C;
+    }
+
+    bool findInChunk(int regionSeed, int x, int z, int *out) {
+        setSeed(regionSeed);
+        if (!isVillageChunkNoSet(x, z)) return false;
+
+        int worldSeed = getVillageWorldSeed(regionSeed, x, z);
+
+        Generator g;
+        setupGenerator(&g, MC_1_2, 0);
+        applySeed(&g, DIM_OVERWORLD, (uint32_t)worldSeed);
+
+        Pos village = { x * 16 + 4, z * 16 + 4 };
+        if (isViableStructurePos(Village, &g, village.x, village.z, 0)) {
+            *out = worldSeed;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // spiral strategy
+    int findClosestViable(int regionSeed, Pos *pos) {
+        Spiral s;
+        while (true) {
+            auto [x, z] = s.next();
+
+            int worldSeed;
+            if (!findInChunk(regionSeed, x, z, &worldSeed)) {
+                continue;
+            }
+
+            pos->x = x * 16 + 4;
+            pos->z = z * 16 + 4;
+            return worldSeed;
+        }
     }
 }

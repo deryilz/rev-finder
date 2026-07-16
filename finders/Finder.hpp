@@ -21,11 +21,10 @@ public:
     std::atomic<uint64_t> nextSeed;
     std::chrono::steady_clock::time_point startTime;
 
-    const int mc = MC_1_2;
     StructureConfig sc;
 
     Finder() {
-        getStructureConfig(Village, mc, &sc);
+        getStructureConfig(Village, MC_1_2, &sc);
         numThreads = std::thread::hardware_concurrency();
     }
 

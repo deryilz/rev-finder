@@ -1,5 +1,3 @@
-#pragma once
-
 #include <format>
 
 #include "Finder.hpp"
@@ -14,9 +12,7 @@ public:
     }
 
     void printHeader() override {
-        mtx.lock();
-        std::cout << "Seed,Torches,Location" << std::endl;
-        mtx.unlock();
+        print("Seed,Torches,Location");
     };
 
     void processVillage(int regionSeed) override {
@@ -28,26 +24,9 @@ public:
 
         if (torchCount < min) return;
 
-        Spiral s;
-        // int found = 0;
-        while (true) {
-            auto [x, z] = s.next();
+        Pos village;
+        int worldSeed = rev::findClosestViable(regionSeed, &village);
 
-            setSeed(regionSeed);
-            if (!isVillageChunkNoSet(x, z)) continue;
-
-            int worldSeed = rev::getVillageWorldSeed(regionSeed, x, z);
-            Pos village = { x * 16 + 4, z * 16 + 4 };
-
-            Generator g;
-            setupGenerator(&g, mc, 0);
-            applySeed(&g, DIM_OVERWORLD, (uint32_t)worldSeed);
-
-            if (!isViableStructurePos(Village, &g, village.x, village.z, 0)) continue;
-
-            print(std::format("{},{},\"{},{}\"", worldSeed, torchCount, village.x, village.z));
-
-            return;
-        }
+        print(std::format("{},{},\"{},{}\"", worldSeed, torchCount, village.x, village.z));
     };
 };
