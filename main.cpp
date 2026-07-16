@@ -1,8 +1,8 @@
-#include "finders/TorchFinder.hpp"
+#include "finders/EnchantTableFinder.hpp"
 
 int main() {
-    Finder* finder = new TorchFinder(21);
-    finder->startSearch(0);
+    Finder* finder = new EnchantTableFinder(18);
+    finder->startSearch();
 
     return 0;
 }

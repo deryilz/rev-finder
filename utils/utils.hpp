@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <utility>
 
@@ -53,7 +54,7 @@ namespace rev {
         return regionSeed - (uint32_t)C;
     }
 
-    bool findInChunk(int regionSeed, int x, int z, int *out) {
+    bool findInChunk(int regionSeed, int x, int z, int *worldSeedOut) {
         setSeed(regionSeed);
         if (!isVillageChunkNoSet(x, z)) return false;
 
@@ -65,7 +66,7 @@ namespace rev {
 
         Pos village = { x * 16 + 4, z * 16 + 4 };
         if (isViableStructurePos(Village, &g, village.x, village.z, 0)) {
-            *out = worldSeed;
+            *worldSeedOut = worldSeed;
             return true;
         } else {
             return false;
@@ -87,5 +88,47 @@ namespace rev {
             pos->z = z * 16 + 4;
             return worldSeed;
         }
+    }
+}
+
+namespace coords {
+
+    Pos pieceOffset(Piece &p, int d1, int d2) {
+        Pos out = {};
+
+        // i dont even know which rotation is which
+        switch (p.rot) {
+            case 0:
+                out.x = p.bb0.x + d1;
+                out.z = p.bb0.z + d2;
+                break;
+            case 1:
+                out.x = p.bb1.x - d2;
+                out.z = p.bb0.z + d1;
+                break;
+            case 2:
+                out.x = p.bb0.x + d1;
+                out.z = p.bb1.z - d2;
+                break;
+            case 3:
+                out.x = p.bb0.x + d2;
+                out.z = p.bb0.z + d1;
+                break;
+        }
+
+        return out;
+    }
+
+    double dist(Pos p1, Pos p2) {
+        double dx = p1.x - p2.x;
+        double dz = p1.z - p2.z;
+        return sqrt(dx*dx + dz*dz);
+    }
+
+    double angle(Pos a, Pos b, Pos c) {
+        double ax = a.x - b.x, az = a.z - b.z;
+        double cx = c.x - b.x, cz = c.z - b.z;
+        double d = (ax * cx + az * cz) / (std::hypot(ax, az) * std::hypot(cx, cz));
+        return std::acos(std::clamp(d, -1.0, 1.0));
     }
 }

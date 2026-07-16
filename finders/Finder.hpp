@@ -18,7 +18,7 @@ public:
     int reportInterval = 1 << 25;
     int numThreads;
     std::mutex mtx;
-    std::atomic<uint64_t> nextSeed;
+    std::atomic<int64_t> nextSeed;
     std::chrono::steady_clock::time_point startTime;
 
     StructureConfig sc;
@@ -39,7 +39,7 @@ public:
 
     // assumes it's linear
     void printRate(int minSeed) {
-        uint64_t seedsProcessed = nextSeed.load() - minSeed;
+        uint64_t seedsProcessed = abs(nextSeed.load() - minSeed);
         auto elapsed = std::chrono::steady_clock::now() - startTime;
         double seconds = std::chrono::duration<double>(elapsed).count();
         double rate = static_cast<double>(seedsProcessed) / seconds;
@@ -56,17 +56,17 @@ public:
         for (unsigned int i = 0; i < numThreads; i++) {
             threads.emplace_back([&](){
                 while (true) {
-                    uint64_t start = nextSeed.fetch_add(chunk);
+                    int64_t start = nextSeed.fetch_add(chunk);
                     if (start > maxSeed) break;
 
-                    uint64_t end;
+                    int64_t end;
                     if (start > maxSeed - chunk) {
                         end = maxSeed;
                     } else {
                         end = start + chunk;
                     }
 
-                    for (uint64_t seed = start; seed <= end; seed++) {
+                    for (int64_t seed = start; seed <= end; seed++) {
                         if (seed % reportInterval == 0 && seed != minSeed) {
                             printRate(minSeed);
                         }

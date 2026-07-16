@@ -1090,7 +1090,7 @@ Pos getSpawn(const Generator *g)
     if (g->mc < MC_1_18)
     {
         const int grid = 10;
-        int step = grid;
+        int step = 0;
         
         Range r = {4, 0, 0, grid, grid, 0, 1};
         int *biomeIds = allocCache(g, r);
