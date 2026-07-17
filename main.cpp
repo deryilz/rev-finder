@@ -1,7 +1,7 @@
-#include "finders/EnchantTableFinder.hpp"
+#include "finders/HighShVillageFinder.hpp"
 
 int main() {
-    Finder* finder = new EnchantTableFinder(18);
+    Finder* finder = new HighShVillageFinder();
     finder->startSearch();
 
     return 0;

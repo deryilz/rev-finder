@@ -8,8 +8,8 @@ extern "C" {
 
 class Spiral {
     int x = 0, z = 0;
-    int dx = 1, dz = 0;
-    int step_size = 1, steps_taken = 0, turns = 0;
+    int dx = 0, dz = -1;
+    int stepSize = 1, stepsTaken = 0, turns = 0;
 
 public:
     std::pair<int,int> next() {
@@ -17,17 +17,17 @@ public:
 
         x += dx;
         z += dz;
-        steps_taken++;
+        stepsTaken++;
 
-        if (steps_taken == step_size) {
-            steps_taken = 0;
+        if (stepsTaken == stepSize) {
+            stepsTaken = 0;
 
-            int temp = dx;
-            dx = -dz;
-            dz = temp;
+            int temp = dz;
+            dz = -dx;
+            dx = temp;
 
             turns++;
-            if (turns % 2 == 0) step_size++;
+            if (turns % 2 == 0) stepSize++;
         }
 
         return current;
@@ -54,7 +54,11 @@ namespace rev {
         return regionSeed - (uint32_t)C;
     }
 
-    bool findInChunk(int regionSeed, int x, int z, int *worldSeedOut) {
+    uint32_t getStrongholdRegionSeed(uint32_t worldSeed, int chunkX, int chunkZ) {
+        return setPopulationSeed(worldSeed, chunkX, chunkZ);
+    }
+
+    bool doesVillageSpawn(int regionSeed, int x, int z, int *worldSeedOut) {
         setSeed(regionSeed);
         if (!isVillageChunkNoSet(x, z)) return false;
 
@@ -72,27 +76,53 @@ namespace rev {
             return false;
         }
     }
-
-    // spiral strategy
-    int findClosestViable(int regionSeed, Pos *pos) {
-        Spiral s;
-        while (true) {
-            auto [x, z] = s.next();
-
-            int worldSeed;
-            if (!findInChunk(regionSeed, x, z, &worldSeed)) {
-                continue;
-            }
-
-            pos->x = x * 16 + 4;
-            pos->z = z * 16 + 4;
-            return worldSeed;
-        }
-    }
 }
 
-namespace coords {
+class VillageIter {
+    Spiral spiral;
+    uint32_t seed;
+    int startX;
+    int startZ;
 
+public:
+    VillageIter(uint32_t regionSeed) {
+        seed = regionSeed;
+        setSeed(regionSeed);
+        startX = nextInt(28);
+        startZ = nextInt(28);
+    }
+
+    void skip(uint32_t n) {
+        for (uint32_t i=0; i<n; i++) {
+            spiral.next();
+        }
+    }
+
+    // returns world seed, modifies pos
+    int nextCandidate(Pos *pos) {
+        auto [x, z] = spiral.next();
+        Pos chunk = { x * 40 + startX, z * 40 + startZ };
+        pos->x = chunk.x * 16 + 4;
+        pos->z = chunk.z * 16 + 4;
+        return rev::getVillageWorldSeed(seed, chunk.x, chunk.z);
+    }
+
+    int nextSpawn(Pos *pos) {
+        while (true) {
+            int worldSeed = nextCandidate(pos);
+
+            Generator g;
+            setupGenerator(&g, MC_1_2, 0);
+            applySeed(&g, DIM_OVERWORLD, (uint32_t)worldSeed);
+
+            if (isViableStructurePos(Village, &g, pos->x, pos->z, 0)) {
+                return worldSeed;
+            }
+        }
+    }
+};
+
+namespace coords {
     Pos pieceOffset(Piece &p, int d1, int d2) {
         Pos out = {};
 

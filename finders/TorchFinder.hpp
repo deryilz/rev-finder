@@ -15,7 +15,7 @@ public:
         print("Seed,Torches,Location");
     };
 
-    void processVillage(int regionSeed) override {
+    void checkSeed(int regionSeed) override {
         Piece houses[100];
 
         int torchCount = 0;
@@ -25,7 +25,8 @@ public:
         if (torchCount < min) return;
 
         Pos village;
-        int worldSeed = rev::findClosestViable(regionSeed, &village);
+        VillageIter v(regionSeed);
+        int worldSeed = v.nextSpawn(&village);
 
         print(std::format("{},{},\"{},{}\"", worldSeed, torchCount, village.x, village.z));
     };

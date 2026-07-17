@@ -1,6 +1,5 @@
 #include <cmath>
 #include <format>
-#include <algorithm>
 
 #include "Finder.hpp"
 #include "../utils/utils.hpp"
@@ -17,7 +16,7 @@ public:
         print("Seed,Dist,Window,Door,Village Chunk");
     };
 
-    void processVillage(int regionSeed) override {
+    void checkSeed(int regionSeed) override {
         Piece houses[100];
 
         int torchCount = 0;
@@ -79,7 +78,7 @@ public:
         }
 
         int worldSeed;
-        if (!rev::findInChunk(regionSeed, chunkX, chunkZ, &worldSeed)) {
+        if (!rev::doesVillageSpawn(regionSeed, chunkX, chunkZ, &worldSeed)) {
             return;
         }
 

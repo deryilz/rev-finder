@@ -29,7 +29,7 @@ public:
     }
 
     virtual void printHeader() = 0;
-    virtual void processVillage(int regionSeed) = 0;
+    virtual void checkSeed(int seed) = 0;
 
     void print(std::string str, bool err = false) {
         mtx.lock();
@@ -71,7 +71,7 @@ public:
                             printRate(minSeed);
                         }
 
-                        processVillage(seed);
+                        checkSeed(seed);
                     }
                 }
             });
