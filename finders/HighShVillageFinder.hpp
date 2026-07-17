@@ -223,7 +223,7 @@ public:
 
             print(std::format(
                 "{},{},\"{},{}\",{}",
-                regionSeed, shSeed, village.x, village.z, wtf
+                worldSeed, shSeed, village.x, village.z, wtf
             ));
         }
     }
