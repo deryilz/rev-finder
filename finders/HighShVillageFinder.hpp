@@ -187,16 +187,23 @@ class HighShVillageFinder : public Finder {
     }
 
 public:
+    int start;
+    int stop;
+
+    HighShVillageFinder(int start = 4, int stop = 36) {
+        this->start = start;
+        this->stop = stop;
+    }
+
     void printHeader() override {
         print("Seed,Stronghold Seed,Location");
     };
 
     void checkSeed(int regionSeed) override {
         VillageIter v(regionSeed);
-        v.skip(4); // sh can't be here
+        v.skip(start);
 
-        // search all other quadrants 6x6 around the center
-        for(int i=0;i<32;i++) {
+        for(int i=0; i<stop-start; i++) {
             Pos village;
             int worldSeed = v.nextCandidate(&village);
 

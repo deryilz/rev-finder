@@ -6,10 +6,10 @@
 
 class EnchantTableFinder : public Finder {
 public:
-    double max;
+    double maxDist;
 
     EnchantTableFinder(double maxDist) {
-        max = maxDist;
+        this->maxDist = maxDist;
     }
 
     void printHeader() override {
@@ -73,7 +73,7 @@ public:
         double totalDist = coords::dist(spawnLocation, windowLocation);
         totalDist += bestDist;
         totalDist = round(totalDist * 100) / 100;
-        if (totalDist > max) {
+        if (totalDist > maxDist) {
             return;
         }
 

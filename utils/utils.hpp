@@ -80,13 +80,13 @@ namespace rev {
 
 class VillageIter {
     Spiral spiral;
-    uint32_t seed;
+    uint32_t regionSeed;
     int startX;
     int startZ;
 
 public:
     VillageIter(uint32_t regionSeed) {
-        seed = regionSeed;
+        this->regionSeed = regionSeed;
         setSeed(regionSeed);
         startX = nextInt(28);
         startZ = nextInt(28);
@@ -104,7 +104,7 @@ public:
         Pos chunk = { x * 40 + startX, z * 40 + startZ };
         pos->x = chunk.x * 16 + 4;
         pos->z = chunk.z * 16 + 4;
-        return rev::getVillageWorldSeed(seed, chunk.x, chunk.z);
+        return rev::getVillageWorldSeed(regionSeed, chunk.x, chunk.z);
     }
 
     int nextSpawn(Pos *pos) {
