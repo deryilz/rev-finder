@@ -188,7 +188,7 @@ class HighShVillageFinder : public Finder {
 
 public:
     void printHeader() override {
-        print("Seed,Stronghold Seed,Location,Has Stronghold!");
+        print("Seed,Stronghold Seed,Location");
     };
 
     void checkSeed(int regionSeed) override {
@@ -220,10 +220,11 @@ public:
                     wtf = true;
                 }
             }
+            if (!wtf) return;
 
             print(std::format(
-                "{},{},\"{},{}\",{}",
-                worldSeed, shSeed, village.x, village.z, wtf
+                "{},{},\"{},{}\"",
+                worldSeed, shSeed, village.x, village.z
             ));
         }
     }

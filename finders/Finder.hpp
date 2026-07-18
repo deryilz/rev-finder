@@ -39,11 +39,12 @@ public:
 
     // assumes it's linear
     void printRate(int minSeed) {
-        uint64_t seedsProcessed = abs(nextSeed.load() - minSeed);
+        int64_t seed = nextSeed.load();
+        uint64_t seedsProcessed = abs(seed - minSeed);
         auto elapsed = std::chrono::steady_clock::now() - startTime;
         double seconds = std::chrono::duration<double>(elapsed).count();
-        double rate = static_cast<double>(seedsProcessed) / seconds;
-        print(std::format("Processed {} seeds, {} seeds/sec", seedsProcessed, rate), true);
+        uint64_t rate = (double)seedsProcessed / seconds;
+        print(std::format("--- ({}) Did {} seeds at {} seeds/sec", seed, seedsProcessed, rate), true);
     }
 
     void startSearch(int minSeed = INT32_MIN, int maxSeed = INT32_MAX) {

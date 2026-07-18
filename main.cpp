@@ -2,7 +2,7 @@
 
 int main() {
     Finder* finder = new HighShVillageFinder();
-    finder->startSearch();
+    finder->startSearch(INT32_MIN + 2986380000);
 
     return 0;
 }
