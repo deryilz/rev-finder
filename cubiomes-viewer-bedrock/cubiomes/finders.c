@@ -200,7 +200,7 @@ int getStructurePos(int structureType, int mc, uint64_t seed, int regX, int regZ
     case Village:
         int sg = 1;//should generate
         if (mc < MC_1_11) {
-            sg = isVillageChunk(sconf, seed, regX, regZ);//chunk coords
+            sg = isVillageChunk(sconf, seed, regX, regZ, true);//chunk coords
             Pos vp;
             vp.x = (regX << 4) + 8;
             vp.z = (regZ << 4) + 8;
@@ -917,7 +917,7 @@ int nextVillageStronghold(StrongholdIter *sh, const Generator *g)
             {
                 for (int z = cz - 8; z < cz + 8 && !placed; z++)
                 {
-                    if (!isVillageChunk(sc, g->seed, x, z))
+                    if (!isVillageChunk(sc, g->seed, x, z, true))
                         continue;
                     p.x = x*16 + 8;
                     p.z = z*16 + 8;
@@ -3318,7 +3318,7 @@ static void setPortalFrameEyes(StrongholdEnv *env, const Piece *portal)
 }
 
 static int getStrongholdPiecesInternal(Piece *list, int n, int mc,
-        uint64_t seed, int chunkX, int chunkZ, uint8_t *portalEyes)
+        uint64_t seed, int chunkX, int chunkZ, uint8_t *portalEyes, bool setRng)
 {
     StrongholdEnv env;
     Piece *p, *prev;
@@ -3338,7 +3338,7 @@ static int getStrongholdPiecesInternal(Piece *list, int n, int mc,
     env.seed = seed;
     env.eyes = portalEyes;
 
-    setPopulationSeed(seed, chunkX, chunkZ);
+    if (setRng) setPopulationSeed(seed, chunkX, chunkZ);
     next(); // burn one call
 
     memset(list, 0, (size_t)n * sizeof(*list));
@@ -3383,13 +3383,13 @@ static int getStrongholdPiecesInternal(Piece *list, int n, int mc,
     return env.count;
 }
 
-int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ)
+int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ, bool setRng)
 {
-    return getStrongholdPiecesInternal(list, n, mc, seed, chunkX, chunkZ, NULL);
+    return getStrongholdPiecesInternal(list, n, mc, seed, chunkX, chunkZ, NULL, setRng);
 }
 
 int getStrongholdPortalFrames(StrongholdPortalFrame *frames,
-        const Piece *list, int count, uint64_t seed)
+        const Piece *list, int count, uint64_t seed, bool setRng)
 {
     Piece tmp[SH_PIECES_MAX];
     uint8_t portalEyes[12] = {0};
@@ -3410,7 +3410,7 @@ int getStrongholdPortalFrames(StrongholdPortalFrame *frames,
 
     startChunkX = floordiv(list[0].pos.x - 2, 16);
     startChunkZ = floordiv(list[0].pos.z - 2, 16);
-    getStrongholdPiecesInternal(tmp, SH_PIECES_MAX, MC_NEWEST, seed, startChunkX, startChunkZ, portalEyes);
+    getStrongholdPiecesInternal(tmp, SH_PIECES_MAX, MC_NEWEST, seed, startChunkX, startChunkZ, portalEyes, setRng);
     setPortalFramePos(frames, portal);
     for (i = 0; i < 12; i++)
     {
@@ -4135,9 +4135,15 @@ static int pv_facing_to_rot(int facing)
     }
 }
 
-int getPreVillagePiecesNoSet(Piece *list, int n, int chunkX, int chunkZ, int *tc)
-{
+int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ, int *tc, bool setRng) {
     static const int hf[4] = { PV_F_SOUTH, PV_F_WEST, PV_F_NORTH, PV_F_EAST };
+
+    if (setRng) {
+        int regX = chunkX < 0 ? chunkX - 40+1 : chunkX;
+        int regZ = chunkZ < 0 ? chunkZ - 40+1 : chunkZ;
+        setRegionSeed(seed, regX, regZ, 10387312);
+    }
+
     next(); // separation x
     next(); // separation z
 
@@ -4212,13 +4218,6 @@ int getPreVillagePiecesNoSet(Piece *list, int n, int chunkX, int chunkZ, int *tc
         dst->next  = NULL;
     }
     return count;
-}
-
-int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ, int *tc) {
-    int regX = chunkX < 0 ? chunkX - 40+1 : chunkX;
-    int regZ = chunkZ < 0 ? chunkZ - 40+1 : chunkZ;
-    setRegionSeed(seed, regX, regZ, 10387312);
-    return getPreVillagePiecesNoSet(list, n, chunkX, chunkZ, tc);
 }
 
 //==============================================================================

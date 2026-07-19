@@ -2,7 +2,6 @@
 #include <format>
 
 #include "Finder.hpp"
-#include "../utils/utils.hpp"
 
 class EnchantTableFinder : public Finder {
 public:
@@ -21,8 +20,7 @@ public:
 
         int torchCount = 0;
         setSeed(regionSeed);
-        // TODO: getHouseListNoSet?
-        int len = getPreVillagePiecesNoSet(houses, 100, 0, 0, &torchCount);
+        int len = getPreVillagePieces(houses, 100, 0, 0, 0, &torchCount, false);
 
         Pos spawnLocation = { 0, 4 };
 

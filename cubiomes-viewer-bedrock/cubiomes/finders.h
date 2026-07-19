@@ -437,7 +437,7 @@ enum
  * that are generated is limited to 'n'. A buffer length of around 512 should
  * be sufficient in practice.
  */
-int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ);
+int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ, bool setRng);
 enum
 {   // Stronghold piece types
     SH_START,
@@ -469,7 +469,7 @@ STRUCT(StrongholdPortalFrame)
  * Returns 12 on success, or 0 if no Portal Room was found.
  */
 int getStrongholdPortalFrames(StrongholdPortalFrame *frames,
-        const Piece *list, int count, uint64_t seed);
+        const Piece *list, int count, uint64_t seed, bool setRng);
 
 /* Generate the structure pieces of a Nether Fortress. The maximum number of
  * pieces that are generated is limited to 'n'. A buffer length of around 400
@@ -548,8 +548,7 @@ enum
     VP_PIECES_MAX = 512,
 };
 
-int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ, int *tc);
-int getPreVillagePiecesNoSet(Piece *list, int n, int chunkX, int chunkZ, int *tc);
+int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ, int *tc, bool setRng);
 
 
 //==============================================================================
@@ -946,25 +945,21 @@ static inline int regionOffset(int coord, int regionSize) {
 }
 
 static inline ATTR(const)
-int isVillageChunkNoSet(int chunkX, int chunkZ)
+int isVillageChunk(StructureConfig config, uint64_t seed, int chunkX, int chunkZ, bool setRng)
 {
     int regionSize = 40;
     int chunkRange = 28;//40 - 12
+
+    if (setRng) {
+        int regX = chunkX < 0 ? chunkX - regionSize + 1 : chunkX;
+        int regZ = chunkZ < 0 ? chunkZ - regionSize + 1 : chunkZ;
+        setRegionSeed(seed, regX, regZ, config.salt);
+    }
 
     int vchunkX = nextInt(chunkRange) + chunkX - regionOffset(chunkX, regionSize);
     int vchunkZ = nextInt(chunkRange) + chunkZ - regionOffset(chunkZ, regionSize);
 
     return vchunkX == chunkX && vchunkZ == chunkZ;
-}
-
-static inline ATTR(const)
-int isVillageChunk(StructureConfig config, uint64_t seed, int chunkX, int chunkZ)
-{
-    int regionSize = 40;
-    int regX = chunkX < 0 ? chunkX - regionSize + 1 : chunkX;
-    int regZ = chunkZ < 0 ? chunkZ - regionSize + 1 : chunkZ;
-    setRegionSeed(seed, regX, regZ, config.salt);
-    return isVillageChunkNoSet(chunkX, chunkZ);
 }
 
 #ifdef __cplusplus

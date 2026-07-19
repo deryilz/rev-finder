@@ -1,7 +1,6 @@
 #include <format>
 
 #include "Finder.hpp"
-#include "../utils/utils.hpp"
 
 class TorchFinder : public Finder {
 public:
@@ -20,7 +19,7 @@ public:
 
         int torchCount = 0;
         setSeed(regionSeed);
-        getPreVillagePiecesNoSet(houses, 100, 0, 0, &torchCount);
+        getPreVillagePieces(houses, 100, 0, 0, 0, &torchCount, false);
 
         if (torchCount < min) return;
 

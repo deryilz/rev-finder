@@ -1,6 +1,12 @@
+#pragma once
+
 #include <algorithm>
 #include <cstdint>
 #include <utility>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <charconv>
 
 extern "C" {
     #include "../cubiomes-viewer-bedrock/cubiomes/finders.h"
@@ -39,6 +45,11 @@ namespace rev {
     const int64_t REV_REGION_B = 132897987541L;
     const int64_t REV_SALT = 10387312L;
 
+    int mod(int a, int m) {
+        int r = a % m;
+        return (r < 0) ? r + m : r;
+    }
+
     uint32_t getVillageRegionSeed(int worldSeed, int chunkX, int chunkZ) {
         int regX = chunkX < 0 ? chunkX - 39 : chunkX;
         int regZ = chunkZ < 0 ? chunkZ - 39 : chunkZ;
@@ -58,17 +69,22 @@ namespace rev {
         return setPopulationSeed(worldSeed, chunkX, chunkZ);
     }
 
-    bool doesVillageSpawn(int regionSeed, int x, int z, int *worldSeedOut) {
+    bool doesVillageSpawn(int regionSeed, int chunkX, int chunkZ, int *worldSeedOut) {
+        // i think this is correct logic
         setSeed(regionSeed);
-        if (!isVillageChunkNoSet(x, z)) return false;
+        int startX = nextInt(28);
+        int startZ = nextInt(28);
+        if (mod(chunkX, 40) != startX || mod(chunkZ, 40) != startZ) {
+            return false;
+        }
 
-        int worldSeed = getVillageWorldSeed(regionSeed, x, z);
+        int worldSeed = getVillageWorldSeed(regionSeed, chunkX, chunkZ);
 
         Generator g;
         setupGenerator(&g, MC_1_2, 0);
         applySeed(&g, DIM_OVERWORLD, (uint32_t)worldSeed);
 
-        Pos village = { x * 16 + 4, z * 16 + 4 };
+        Pos village = { chunkX * 16 + 4, chunkZ * 16 + 4 };
         if (isViableStructurePos(Village, &g, village.x, village.z, 0)) {
             *worldSeedOut = worldSeed;
             return true;
@@ -155,6 +171,13 @@ namespace coords {
         return sqrt(dx*dx + dz*dz);
     }
 
+    // lalala clone
+    double dist(Pos3 p1, Pos3 p2) {
+        double dx = p1.x - p2.x;
+        double dz = p1.z - p2.z;
+        return sqrt(dx*dx + dz*dz);
+    }
+
     double angle(Pos a, Pos b, Pos c) {
         double ax = a.x - b.x, az = a.z - b.z;
         double cx = c.x - b.x, cz = c.z - b.z;
@@ -162,3 +185,27 @@ namespace coords {
         return std::acos(std::clamp(d, -1.0, 1.0));
     }
 }
+
+namespace str {
+    std::vector<std::string> split(std::string input, char c = ',') {
+        std::stringstream ss(input);
+
+        std::string token;
+        std::vector<std::string> parts;
+
+        while (std::getline(ss, token, c)) {
+            if (token.front() == '"') token.erase(0, 1);
+            if (token.back() == '"') token.pop_back();
+            parts.push_back(token);
+        }
+
+        return parts;
+    }
+
+    // just assumes it works fine
+    int64_t num(std::string input) {
+        int64_t value = 0;
+        std::from_chars(input.data(), input.data() + input.size(), value);
+        return value;
+    }
+};
