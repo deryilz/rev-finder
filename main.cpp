@@ -3,7 +3,7 @@
 
 int main() {
     HighShVillageModifier mod {};
-    if (mod.openFile("high-sh-villages-3200.txt")) {
+    if (mod.openFile("high-sh-villages-3900.txt")) {
         mod.startModifying();
     }
 
