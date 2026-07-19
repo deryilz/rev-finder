@@ -2,7 +2,6 @@
 #include <algorithm>
 
 #include "Finder.hpp"
-#include "../utils/utils.hpp"
 
 class LargeVillageFinder : public Finder {
 public:
@@ -17,7 +16,7 @@ public:
 
         int torchCount = 0;
         setSeed(regionSeed);
-        int len = getPreVillagePiecesNoSet(houses, 100, 0, 0, &torchCount);
+        int len = getPreVillagePieces(houses, 100, 0, 0, 0, &torchCount, false);
 
         int minX = houses[0].bb0.x;
         int maxX = houses[0].bb1.x;

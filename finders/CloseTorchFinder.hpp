@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "Finder.hpp"
-#include "../utils/utils.hpp"
 
 class CloseTorchFinder : public Finder {
 public:
@@ -17,7 +16,7 @@ public:
 
         int torchCount = 0;
         setSeed(regionSeed);
-        int len = getPreVillagePiecesNoSet(houses, 100, 0, 0, &torchCount);
+        int len = getPreVillagePieces(houses, 100, 0, 0, 0, &torchCount, false);
 
         if (torchCount < 10) return;
 

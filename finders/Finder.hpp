@@ -8,9 +8,7 @@
 #include <format>
 #include <string>
 
-extern "C" {
-    #include "../cubiomes-viewer-bedrock/cubiomes/finders.h"
-}
+#include "../utils/utils.hpp"
 
 class Finder {
 public:
