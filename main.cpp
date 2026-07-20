@@ -1,9 +1,9 @@
 #include "modifiers/HighShVillageModifier.hpp"
-#include "finders/HighShVillageFinder.hpp"
+// #include "finders/HighShVillageFinder.hpp"
 
 int main() {
     HighShVillageModifier mod {};
-    if (mod.openFile("high-sh-villages-3900.txt")) {
+    if (mod.openFile("high-sh-villages-6400.txt")) {
         mod.startModifying();
     }
 
