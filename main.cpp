@@ -1,14 +1,10 @@
-#include "modifiers/HighShVillageModifier.hpp"
+// #include "modifiers/HighShVillageModifier.hpp"
 // #include "finders/HighShVillageFinder.hpp"
+#include "finders/GaussHighShFinder.hpp"
 
 int main() {
-    HighShVillageModifier mod {};
-    if (mod.openFile("high-sh-villages-6400.txt")) {
-        mod.startModifying();
-    }
-
-    // HighShVillageFinder finder(100, 144);
-    // finder.startSearch(-1107143648);
+    GaussHighShFinder finder {};
+    finder.startSearch();
 
     return 0;
 }

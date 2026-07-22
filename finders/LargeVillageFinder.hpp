@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "Finder.hpp"
+#include "../utils/utils.hpp"
 
 class LargeVillageFinder : public Finder {
 public:

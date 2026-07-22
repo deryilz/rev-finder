@@ -2,6 +2,7 @@
 #include <format>
 
 #include "Finder.hpp"
+#include "../utils/utils.hpp"
 
 class EnchantTableFinder : public Finder {
 public:

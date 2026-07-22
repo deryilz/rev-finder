@@ -12,6 +12,10 @@ So anyway, say I figure out that the village ID 123 has a desirable number of to
 
 And once I do this for all possible village IDs, I can also be sure that I haven't missed anything! For example, I can tell you with certainty that you'll never find a village with over 30 lamps, or that you'll never find a stronghold that reaches y=73. Finding structures in reverse, hence the name of this repo, also is like hundreds of times faster, so that's a bonus too.
 
+### elimination?
+
+I'm learning about Lagrange-Gauss reduction (basically the 2D subset of LLL reduction) to find chunks with certain stronghold seeds faster. It's a pretty cool application of linear algebra (a field I need to learn more about, TBH)
+
 ### credit
 
 For Cubiomes I'm using an old version of https://github.com/FragrantResult186/cubiomes-bedrock, slightly modified to add stuff like accessing torches/paths in villages or generating hypothetical versions of vllages/strongholds, assuming the global RNG had a certain value beforehand.

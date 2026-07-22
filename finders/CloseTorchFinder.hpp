@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "Finder.hpp"
+#include "../utils/utils.hpp"
 
 class CloseTorchFinder : public Finder {
 public:

@@ -1,6 +1,7 @@
 #include <format>
 
 #include "Modifier.hpp"
+#include "../utils/utils.hpp"
 
 class HighShVillageModifier : public Modifier {
 public:
@@ -22,7 +23,7 @@ public:
         Piece *portalRoom = nullptr;
         Piece *highestOther = starter;
 
-        for(Piece &piece : pieces) {
+        for (Piece &piece : pieces) {
             int y = piece.bb1.y;
             if (y > maxHeight) {
                 maxHeight = y;
@@ -39,7 +40,7 @@ public:
         int areaOverWater = 0;
 
         // second pass yay
-        for(Piece &piece : pieces) {
+        for (Piece &piece : pieces) {
             int y = piece.bb1.y;
             if (y > 63) {
                 int dx = piece.bb1.x - piece.bb0.x;

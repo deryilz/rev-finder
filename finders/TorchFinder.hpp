@@ -1,6 +1,7 @@
 #include <format>
 
 #include "Finder.hpp"
+#include "../utils/utils.hpp"
 
 class TorchFinder : public Finder {
 public:
