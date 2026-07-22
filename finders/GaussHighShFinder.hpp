@@ -59,7 +59,7 @@ public:
     }
 
     void printHeader() override {
-        print("Seed,Village,Distance from spawn,Max height,Starter,Portal room,Highest other room,Distance from starter,Area over water level,Stronghold seed");
+        print("Seed,Stronghold,Distance from spawn,Max height,Starter,Portal room,Highest other room,Distance from starter,Area over water level,Stronghold seed");
     };
 
     void checkSeed(int seed) override {
