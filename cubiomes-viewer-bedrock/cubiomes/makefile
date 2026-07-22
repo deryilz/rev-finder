@@ -2,7 +2,7 @@
 #AR      = ar
 ARFLAGS = cr
 override LDFLAGS = -lm
-override CFLAGS += -Wall -Wextra -fwrapv
+override CFLAGS += -Wall -Wextra -fwrapv -std=c23
 
 ifeq ($(OS),Windows_NT)
 	override CFLAGS += -D_WIN32
