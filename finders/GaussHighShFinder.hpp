@@ -50,16 +50,22 @@ static uint32_t targets[] = {
     4232312206, 4249174359, 4259515654, 4274262272,
 };
 
+// for 1.16 because why not
 class GaussHighShFinder : public Finder {
     int chunkMax;
+    StructureConfig villageConfig;
+    StructureConfig shConfig;
 
 public:
     GaussHighShFinder(int chunkMax = 625) {
         this->chunkMax = chunkMax;
+
+        getStructureConfig(Village, MC_1_16, &villageConfig);
+        getStructureConfig(Stronghold, MC_1_16, &shConfig);
     }
 
     void printHeader() override {
-        print("Seed,Stronghold,Distance from spawn,Max height,Starter,Portal room,Highest other room,Distance from starter,Area over water level,Stronghold seed");
+        print("Seed,Village,Distance from spawn,Max height,Starter,Portal room,Highest other room,Distance from starter,Area over water level,Stronghold seed");
     };
 
     void checkSeed(int seed) override {
@@ -68,24 +74,40 @@ public:
             GaussChunkIter iter (info, target, chunkMax);
             Pos pos;
             while (iter.nextMatch(&pos)) {
-                handleMatch(seed, target, pos);
+                handleMatch(seed, target, pos.x >> 4, pos.z >> 4);
             }
         }
     }
 
     // copied from HighShVillageModifier
-    void handleMatch(int seed, uint32_t strongholdSeed, Pos pos) {
-        StructureConfig sc;
-        getStructureConfig(Stronghold, MC_1_2, &sc);
-        Pos sh;
-        int sx = floordiv(pos.x >> 4, 200);
-        int sz = floordiv(pos.z >> 4, 200);
+    void handleMatch(int seed, uint32_t strongholdSeed, int chunkX, int chunkZ) {
+        int regX = floordiv(chunkX, 27);
+        int regZ = floordiv(chunkZ, 27);
+        Pos village = getLargeStructurePos(villageConfig, seed, regX, regZ);
 
-        if (!getStaticStronghold(sc, seed, sx, sz, &sh)) return;
-        if (sh.x != pos.x + 4 || sh.z != pos.z + 4) return;
+        if ((village.x >> 4) != chunkX || (village.z >> 4) != chunkZ) {
+            return;
+        }
+
+        Generator g;
+        setupGenerator(&g, MC_1_16, 0);
+        applySeed(&g, DIM_OVERWORLD, (uint32_t)seed);
+
+        if (!isViableStructurePos(Village, &g, village.x, village.z, 0)) {
+            return;
+        }
+
+        StrongholdIter sh {};
+        bool wtf = false;
+        while (nextVillageStronghold(&sh, &g) > 0) {
+            if ((sh.pos.x >> 4) == chunkX && (sh.pos.z >> 4) == chunkZ) {
+                wtf = true;
+            }
+        }
+        if (!wtf) return;
 
         Piece pieces[SH_PIECES_MAX];
-        int len = getStrongholdPieces(pieces, SH_PIECES_MAX, MC_1_2, seed, sh.x>>4, sh.z>>4, true);
+        int len = getStrongholdPieces(pieces, SH_PIECES_MAX, MC_1_16, seed, chunkX, chunkZ, true);
 
         int maxHeight = 0;
         Piece *starter = &pieces[0];
@@ -125,11 +147,8 @@ public:
             }
         }
 
-        Generator g;
-        setupGenerator(&g, MC_1_2, 0);
-        applySeed(&g, DIM_OVERWORLD, (uint32_t)seed);
         Pos spawn = getSpawn(&g);
-        int shDist = coords::dist(spawn, sh);
+        int villageDist = coords::dist(spawn, village);
 
         auto showCoord = [](Piece p) {
             return std::format("/tp {} {} {}", p.pos.x, p.bb1.y, p.pos.z);
@@ -140,7 +159,7 @@ public:
 
         print(std::format(
             "{},{},{},{},{},{},{},{},{},{}",
-            seed, showPos(sh), shDist, maxHeight,
+            seed, showPos(village), villageDist, maxHeight,
             showCoord(*starter), portalRoom ? showCoord(*portalRoom) : "",
             showCoord(*highestOther), minDistOfHighest, areaOverWater, strongholdSeed
         ));
