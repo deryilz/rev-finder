@@ -35,10 +35,10 @@ public:
     // assumes it's linear
     void printRate(int minSeed) {
         int64_t seed = nextSeed.load();
-        uint64_t seedsProcessed = abs(seed - minSeed);
+        int64_t seedsProcessed = seed - minSeed;
         auto elapsed = std::chrono::steady_clock::now() - startTime;
         double seconds = std::chrono::duration<double>(elapsed).count();
-        uint64_t rate = (double)seedsProcessed / seconds;
+        int64_t rate = (double)seedsProcessed / seconds;
         print(std::format("--- ({}) Did {} seeds at {} seeds/sec", seed, seedsProcessed, rate), true);
     }
 
