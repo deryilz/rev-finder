@@ -68,7 +68,6 @@ public:
     Vector2D v1;
     Vector2D v2;
     double det_inv;
-    // corners
 
     GaussInfo(int seed) {
         this->seed = seed;
@@ -119,13 +118,13 @@ public:
         for (Vector2D v : corners) {
             double dx = p.x - v.x;
             double dz = p.z - v.z;
-            double c1 = round((info.v2.z * dx - info.v2.x * dz) * info.det_inv);
-            double c2 = round((info.v1.x * dz - info.v1.z * dx) * info.det_inv);
+            double c1 = (info.v2.z * dx - info.v2.x * dz) * info.det_inv;
+            double c2 = (info.v1.x * dz - info.v1.z * dx) * info.det_inv;
 
-            min_c1 = std::min(min_c1, (int64_t)c1);
-            max_c1 = std::max(max_c1, (int64_t)c1);
-            min_c2 = std::min(min_c2, (int64_t)c2);
-            max_c2 = std::max(max_c2, (int64_t)c2);
+            min_c1 = std::min(min_c1, (int64_t)ceil(c1));
+            max_c1 = std::max(max_c1, (int64_t)floor(c1));
+            min_c2 = std::min(min_c2, (int64_t)ceil(c2));
+            max_c2 = std::max(max_c2, (int64_t)floor(c2));
         }
 
         i = min_c1;
