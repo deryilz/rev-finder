@@ -13,7 +13,6 @@ uint32_t inv(uint32_t a) {
     x *= 2 - a * x;
     x *= 2 - a * x;
     x *= 2 - a * x;
-    x *= 2 - a * x;
     return x;
 }
 
