@@ -77,7 +77,7 @@ public:
         a_inv = inv(a);
 
         b1 = { 1ULL<<32, 0 };
-        b2 = { -(int64_t)a_inv*b, 1 };
+        b2 = { -a_inv*b, 1 }; // there's overflow but it's already done mod M
 
         auto result = lagrange_gauss(b1, b2);
         v1 = result.first;
