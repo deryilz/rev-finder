@@ -63,7 +63,7 @@ public:
         Pos village = {x, z};
         int villageDist = coords::dist(spawn, village);
 
-        auto showCoord = [](Piece p) {
+        auto showPiece = [](Piece p) {
             return std::format("/tp {} {} {}", p.pos.x, p.bb1.y, p.pos.z);
         };
         auto showPos = [](Pos p) {
@@ -73,8 +73,8 @@ public:
         print(std::format(
             "{},{},{},{},{},{},{},{},{},{}",
             seed, showPos(village), villageDist, maxHeight,
-            showCoord(*starter), portalRoom ? showCoord(*portalRoom) : "",
-            showCoord(*highestOther), minDistOfHighest, areaOverWater, strongholdSeed
+            showPiece(*starter), portalRoom ? showPiece(*portalRoom) : "",
+            showPiece(*highestOther), minDistOfHighest, areaOverWater, strongholdSeed
         ));
     }
 };

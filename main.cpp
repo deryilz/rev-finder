@@ -1,9 +1,7 @@
-// #include "modifiers/HighShVillageModifier.hpp"
-// #include "finders/HighShVillageFinder.hpp"
-#include "finders/GaussHighShFinder.hpp"
+#include "finders/MansionHighShFinder.hpp"
 
 int main() {
-    GaussHighShFinder finder {};
+    MansionHighShFinder finder {};
     finder.startSearch();
 
     return 0;

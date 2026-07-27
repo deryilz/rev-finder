@@ -19,3 +19,5 @@ I'm learning about Lagrange-Gauss reduction (basically the 2D subset of LLL redu
 ### credit
 
 For Cubiomes I'm using an old version of https://github.com/FragrantResult186/cubiomes-bedrock, slightly modified to add stuff like accessing torches/paths in villages or generating hypothetical versions of vllages/strongholds, assuming the global RNG had a certain value beforehand.
+
+Remember to `git clone --recursive`!
