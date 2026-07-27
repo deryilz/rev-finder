@@ -92,7 +92,7 @@ public:
 
         reg = chunkToRegion(chunkX, chunkZ, mansionConfig.regionSize);
         Pos mansion = getLargeStructurePos(mansionConfig, seed, reg.x, reg.z);
-        if (coords::dist(sh, mansion) > 150) {
+        if (coords::dist(sh, mansion) > 300) {
             return;
         }
 
