@@ -135,7 +135,7 @@ public:
         };
 
         print(std::format(
-            "{},{},{},{},{}",
+            "{},{},{},{},{},{}",
             seed, showPos(mansion), showPiece(*closestHighRoom),
             bestDist, maxHeight, strongholdSeed
         ));
