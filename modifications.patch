@@ -1,0 +1,279 @@
+diff --git a/finders.c b/finders.c
+index 56e458f..feb2caa 100644
+--- a/finders.c
++++ b/finders.c
+@@ -196,7 +196,7 @@ int getStructurePos(int structureType, int mc, uint64_t seed, int regX, int regZ
+ 
+     case Village:
+         if (mc < MC_1_11) {
+-            if (!isVillageChunk(sconf, seed, regX, regZ))
++            if (!isVillageChunk(sconf, seed, regX, regZ, true))
+                 return 0;
+             Pos vp;
+             vp.x = (regX << 4) + 8;
+@@ -928,7 +928,7 @@ int nextVillageStronghold(StrongholdIter *sh, const Generator *g)
+             {
+                 for (int z = cz - 8; z < cz + 8 && !placed; z++)
+                 {
+-                    if (!isVillageChunk(sc, g->seed, x, z))
++                    if (!isVillageChunk(sc, g->seed, x, z, true))
+                         continue;
+                     p.x = x*16 + 8;
+                     p.z = z*16 + 8;
+@@ -1102,7 +1102,8 @@ Pos getSpawn(const Generator *g)
+     if (g->mc < MC_1_18)
+     {
+         const int grid = 10;
+-        int step = grid;
++        int step = g->mc < MC_1_12 ? 0 : 10;
++        int sx   = g->mc < MC_1_12 ? 0 : 1;
+ 
+         Range r = {4, 0, 0, grid, grid, 0, 1};
+         int *biomeIds = allocCache(g, r);
+@@ -1122,7 +1123,7 @@ Pos getSpawn(const Generator *g)
+             }
+ 
+             for (int z = 1; z < grid-1; z++) {
+-                for (int x = 1; x < grid-1; x++) {
++                for (int x = sx; x < grid-1; x++) {
+                     if (surroundingBiomes(biomeIds, grid, x, z)) {
+                         spawn.x = 4 * (x + step);
+                         spawn.z = 4 * z;
+@@ -3372,7 +3373,7 @@ void setPortalFrameEyes(StrongholdEnv *env, const Piece *portal)
+ 
+ static
+ int getStrongholdPiecesInternal(Piece *list, int n, int mc,
+-        uint64_t seed, int chunkX, int chunkZ, uint8_t *portalEyes)
++        uint64_t seed, int chunkX, int chunkZ, uint8_t *portalEyes, bool setRng)
+ {
+     StrongholdEnv env;
+     Piece *p, *prev;
+@@ -3392,7 +3393,7 @@ int getStrongholdPiecesInternal(Piece *list, int n, int mc,
+     env.seed = seed;
+     env.eyes = portalEyes;
+ 
+-    setPopulationSeed(seed, chunkX, chunkZ);
++    if (setRng) setPopulationSeed(seed, chunkX, chunkZ);
+     next(); // burn one call
+ 
+     memset(list, 0, (size_t)n * sizeof(*list));
+@@ -3437,13 +3438,13 @@ int getStrongholdPiecesInternal(Piece *list, int n, int mc,
+     return env.count;
+ }
+ 
+-int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ)
++int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ, bool setRng)
+ {
+-    return getStrongholdPiecesInternal(list, n, mc, seed, chunkX, chunkZ, NULL);
++    return getStrongholdPiecesInternal(list, n, mc, seed, chunkX, chunkZ, NULL, setRng);
+ }
+ 
+ int getStrongholdPortalFrames(StrongholdPortalFrame *frames,
+-        const Piece *list, int count, uint64_t seed)
++        const Piece *list, int count, uint64_t seed, bool setRng)
+ {
+     Piece tmp[SH_PIECES_MAX];
+     uint8_t portalEyes[12] = {0};
+@@ -3464,7 +3465,7 @@ int getStrongholdPortalFrames(StrongholdPortalFrame *frames,
+ 
+     startChunkX = floordiv(list[0].pos.x - 2, 16);
+     startChunkZ = floordiv(list[0].pos.z - 2, 16);
+-    getStrongholdPiecesInternal(tmp, SH_PIECES_MAX, MC_NEWEST, seed, startChunkX, startChunkZ, portalEyes);
++    getStrongholdPiecesInternal(tmp, SH_PIECES_MAX, MC_NEWEST, seed, startChunkX, startChunkZ, portalEyes, setRng);
+     setPortalFramePos(frames, portal);
+     for (i = 0; i < 12; i++)
+     {
+@@ -4421,7 +4422,7 @@ static int pv_create_building(PV_VStart *vs, int vpType,
+     return idx;
+ }
+ 
+-static int pv_gen_component(PV_VStart *vs, int x,int y,int z,int facing,int depth)
++static int pv_gen_component(PV_VStart *vs, int x,int y,int z,int facing,int depth,int *tc)
+ {
+     int total = pv_pw_total(&vs->weights);
+     if (total<=0)
+@@ -4465,12 +4466,13 @@ static int pv_gen_component(PV_VStart *vs, int x,int y,int z,int facing,int dept
+         PV_Piece p; p.vpType=VP_TORCH; p.facing=facing; p.depth=depth; p.bb=bb; p.length=0;
+         int idx = vs->pieces->n;
+         pv_pa_add(vs->pieces, &p);
++        *tc += 1;
+         return idx;
+     }
+     return -1;
+ }
+ 
+-static int pv_gen_add_component(PV_VStart *vs, int x,int y,int z,int facing,int depth)
++static int pv_gen_add_component(PV_VStart *vs, int x,int y,int z,int facing,int depth,int *tc)
+ {
+     if (depth>50)
+         return -1;
+@@ -4478,7 +4480,7 @@ static int pv_gen_add_component(PV_VStart *vs, int x,int y,int z,int facing,int
+     int dz = z - vs->startBB.minZ; if(dz<0) dz=-dz;
+     if (dx>112 || dz>112)
+         return -1;
+-    int idx = pv_gen_component(vs,x,y,z,facing,depth+1);
++    int idx = pv_gen_component(vs,x,y,z,facing,depth+1,tc);
+     if (idx>=0)
+     {
+         pv_pl_add(&vs->pendingHouses, idx);
+@@ -4486,44 +4488,44 @@ static int pv_gen_add_component(PV_VStart *vs, int x,int y,int z,int facing,int
+     return idx;
+ }
+ 
+-static int pv_get_next_nn(PV_VStart *vs, int pi, int yOff, int zOff)
++static int pv_get_next_nn(PV_VStart *vs, int pi, int yOff, int zOff, int *tc)
+ {
+     const PV_Piece *p = &vs->pieces->arr[pi];
+     switch (p->facing)
+     {
+     case PV_F_NORTH:
+     case PV_F_SOUTH:
+-        return pv_gen_add_component(vs, p->bb.minX-1, p->bb.minY+yOff, p->bb.minZ+zOff, PV_F_WEST, p->depth);
++        return pv_gen_add_component(vs, p->bb.minX-1, p->bb.minY+yOff, p->bb.minZ+zOff, PV_F_WEST, p->depth,tc);
+     case PV_F_WEST:
+     case PV_F_EAST:
+-        return pv_gen_add_component(vs, p->bb.minX+zOff, p->bb.minY+yOff, p->bb.minZ-1, PV_F_NORTH, p->depth);
++        return pv_gen_add_component(vs, p->bb.minX+zOff, p->bb.minY+yOff, p->bb.minZ-1, PV_F_NORTH, p->depth,tc);
+     default: return -1;
+     }
+ }
+ 
+-static int pv_get_next_pp(PV_VStart *vs, int pi, int yOff, int zOff)
++static int pv_get_next_pp(PV_VStart *vs, int pi, int yOff, int zOff, int *tc)
+ {
+     const PV_Piece *p = &vs->pieces->arr[pi];
+     switch (p->facing)
+     {
+     case PV_F_NORTH:
+     case PV_F_SOUTH:
+-        return pv_gen_add_component(vs, p->bb.maxX+1, p->bb.minY+yOff, p->bb.minZ+zOff, PV_F_EAST, p->depth);
++        return pv_gen_add_component(vs, p->bb.maxX+1, p->bb.minY+yOff, p->bb.minZ+zOff, PV_F_EAST, p->depth, tc);
+     case PV_F_WEST:
+     case PV_F_EAST:
+-        return pv_gen_add_component(vs, p->bb.minX+zOff, p->bb.minY+yOff, p->bb.maxZ+1, PV_F_SOUTH, p->depth);
++        return pv_gen_add_component(vs, p->bb.minX+zOff, p->bb.minY+yOff, p->bb.maxZ+1, PV_F_SOUTH, p->depth, tc);
+     default: return -1;
+     }
+ }
+ 
+-static void pv_path_build(PV_VStart *vs, int pi)
++static void pv_path_build(PV_VStart *vs, int pi, int *tc)
+ {
+     int length = vs->pieces->arr[pi].length;
+     int facing = vs->pieces->arr[pi].facing;
+     int flag = 0;
+     for (int i=nextInt(5); i<length-8; i+=2+nextInt(5))
+     {
+-        int idx = pv_get_next_nn(vs,pi,0,i);
++        int idx = pv_get_next_nn(vs,pi,0,i,tc);
+         if (idx>=0)
+         {
+             int xs=pvbb_xsize(&vs->pieces->arr[idx].bb);
+@@ -4533,7 +4535,7 @@ static void pv_path_build(PV_VStart *vs, int pi)
+     }
+     for (int j=nextInt(5); j<length-8; j+=2+nextInt(5))
+     {
+-        int idx = pv_get_next_pp(vs,pi,0,j);
++        int idx = pv_get_next_pp(vs,pi,0,j,tc);
+         if (idx>=0)
+         {
+             int xs=pvbb_xsize(&vs->pieces->arr[idx].bb);
+@@ -4591,12 +4593,15 @@ static int pv_facing_to_rot(int facing)
+     }
+ }
+ 
+-int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ)
+-{
++int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ, int *tc, bool setRng) {
+     static const int hf[4] = { PV_F_SOUTH, PV_F_WEST, PV_F_NORTH, PV_F_EAST };
+-    int regX = chunkX < 0 ? chunkX - 40+1 : chunkX;
+-    int regZ = chunkZ < 0 ? chunkZ - 40+1 : chunkZ;
+-    setRegionSeed(seed, regX, regZ, 10387312);
++
++    if (setRng) {
++        int regX = chunkX < 0 ? chunkX - 40+1 : chunkX;
++        int regZ = chunkZ < 0 ? chunkZ - 40+1 : chunkZ;
++        setRegionSeed(seed, regX, regZ, 10387312);
++    }
++
+     next(); // separation x
+     next(); // separation z
+ 
+@@ -4646,7 +4651,7 @@ int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunk
+         {
+             int j = nextInt(vs.pendingRoads.n);
+             int idx = pv_pl_remove(&vs.pendingRoads, j);
+-            pv_path_build(&vs, idx);
++            pv_path_build(&vs, idx, tc);
+         }
+     }
+ 
+diff --git a/finders.h b/finders.h
+index b03c243..98c1860 100644
+--- a/finders.h
++++ b/finders.h
+@@ -425,7 +425,7 @@ enum
+  * that are generated is limited to 'n'. A buffer length of around 512 should
+  * be sufficient in practice.
+  */
+-int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ);
++int getStrongholdPieces(Piece *list, int n, int mc, uint64_t seed, int chunkX, int chunkZ, bool setRng);
+ enum
+ {   // Stronghold piece types
+     SH_START,
+@@ -457,7 +457,7 @@ STRUCT(StrongholdPortalFrame)
+  * Returns 12 on success, or 0 if no Portal Room was found.
+  */
+ int getStrongholdPortalFrames(StrongholdPortalFrame *frames,
+-        const Piece *list, int count, uint64_t seed);
++        const Piece *list, int count, uint64_t seed, bool setRng);
+ 
+ /* Generate the structure pieces of a Nether Fortress. The maximum number of
+  * pieces that are generated is limited to 'n'. A buffer length of around 400
+@@ -556,7 +556,7 @@ enum
+     VP_PIECES_MAX = 512,
+ };
+ 
+-int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ);
++int getPreVillagePieces(Piece *list, int n, uint64_t seed, int chunkX, int chunkZ, int *tc, bool setRng);
+ 
+ 
+ //==============================================================================
+@@ -939,13 +939,15 @@ static inline int regionOffset(int coord, int regionSize) {
+ }
+ 
+ static inline ATTR(const)
+-int isVillageChunk(StructureConfig config, uint64_t seed, int chunkX, int chunkZ)
++int isVillageChunk(StructureConfig config, uint64_t seed, int chunkX, int chunkZ, bool setRng)
+ {
+     int regionSize = 40;
+     int chunkRange = 28;//40 - 12
+-    int regionX = chunkX < 0 ? chunkX - regionSize + 1 : chunkX;
+-    int regionZ = chunkZ < 0 ? chunkZ - regionSize + 1 : chunkZ;
+-    setRegionSeed(seed, regionX, regionZ, config.salt);
++    if (setRng) {
++        int regionX = chunkX < 0 ? chunkX - regionSize + 1 : chunkX;
++        int regionZ = chunkZ < 0 ? chunkZ - regionSize + 1 : chunkZ;
++        setRegionSeed(seed, regionX, regionZ, config.salt);
++    }
+     int vchunkX = nextInt(chunkRange) + chunkX - regionOffset(chunkX, regionSize);
+     if (vchunkX != chunkX) return 0;
+     int vchunkZ = nextInt(chunkRange) + chunkZ - regionOffset(chunkZ, regionSize);
+diff --git a/rng.h b/rng.h
+index 849dc2e..4bce1cd 100644
+--- a/rng.h
++++ b/rng.h
+@@ -344,6 +344,13 @@ static inline uint64_t getStartSeed(uint64_t ws, uint64_t ls)
+ 
+ /* Linear interpolations
+  */
++#include <math.h>
++
++#ifdef lerp
++#undef lerp
++#endif
++#define lerp cubiomes_c_lerp
++
+ static inline double lerp(double part, double from, double to)
+ {
+     return from + part * (to - from);

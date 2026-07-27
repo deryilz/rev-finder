@@ -9,7 +9,7 @@
 #include <charconv>
 
 extern "C" {
-    #include "../cubiomes-viewer-bedrock/cubiomes/finders.h"
+    #include "../cubiomes-patch/finders.h"
 }
 
 class Spiral {

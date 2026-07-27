@@ -4,7 +4,9 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "../cubiomes-viewer-bedrock/cubiomes/finders.h"
+extern "C" {
+    #include "../cubiomes-patch/finders.h"
+}
 
 // for mod 2^32 only
 uint32_t inv(uint32_t a) {
